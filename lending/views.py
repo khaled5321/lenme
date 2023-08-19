@@ -1,10 +1,15 @@
-from django.utils.decorators import method_decorator
 from django.core.cache import cache
 from rest_framework import permissions, status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from accounts.permissions import LenderPermission, BorrowerPermission
-from .services import loan_request_create, offer_create, offer_accept
+from .services import (
+    loan_request_create,
+    offer_create,
+    offer_accept,
+    lender_balance_check,
+    offer_fund,
+)
 from .serializers import LoanRequestSerializer, OfferSerializer
 from .models import LoanRequest, Offer
 
@@ -80,7 +85,37 @@ class Offers(APIView):
 class AcceptOffer(APIView):
     permission_classes = [permissions.IsAuthenticated, BorrowerPermission]
 
-    def get(self, request, pk):
-        offer_accept()
+    def get(self, request, offer_id):
+        offer_accept(offer_id=offer_id)
 
         return Response("offer accepted successfully")
+
+
+class AcceptedOffers(APIView):
+    permission_classes = [permissions.IsAuthenticated, BorrowerPermission]
+    serializer_class = OfferSerializer
+
+    def get_queryset(self, request):
+        return Offer.objects.filter(status="accepted")
+
+    def get(self, request):
+        offers = cache.get("accepted_offers")
+
+        if offers is None:
+            cache.set("accepted_offers", self.get_queryset(request), 60 * 15)
+            offers = cache.get("accepted_offers")
+
+        serializer = self.serializer_class(offers, many=True)
+
+        return Response(serializer.data)
+
+
+class FundOffer(APIView):
+    permission_classes = [permissions.IsAuthenticated, LenderPermission]
+
+    def get(self, request, offer_id):
+        lender_balance_check(lender=request.user, offer_id=offer_id)
+
+        offer_fund(request=request, offer_id=offer_id)
+
+        return Response("Offer funded successfully")

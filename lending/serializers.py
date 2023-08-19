@@ -25,6 +25,7 @@ class OfferSerializer(serializers.ModelSerializer):
             "loan_request",
             "interest_rate",
             "monthly_payment",
+            "status",
             "created_at",
         ]
 

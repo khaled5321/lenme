@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "drf_spectacular_sidecar",
+    "kronos",
     # Internal apps
     "accounts",
     "lending",

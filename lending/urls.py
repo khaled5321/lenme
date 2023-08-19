@@ -14,5 +14,15 @@ urlpatterns = [
         name="make_offer",
     ),
     path("offers/", views.Offers.as_view(), name="offers"),
-    path("offers/<int:pk>/accept_offer/", views.Offers.as_view(), name="accept_offer"),
+    path(
+        "offers/<int:offer_id>/accept_offer/",
+        views.AcceptOffer.as_view(),
+        name="accept_offer",
+    ),
+    path("accepted_offers/", views.AcceptedOffers.as_view(), name="accepted_offers"),
+    path(
+        "accepted_offers/<int:offer_id>/fund/",
+        views.FundOffer.as_view(),
+        name="check_balance",
+    ),
 ]

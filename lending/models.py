@@ -7,6 +7,12 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 User = get_user_model()
 
 LOAN_STATUS = (("pending", "pending"), ("funded", "funded"), ("completed", "completed"))
+OFFER_STATUS = (
+    ("pending", "pending"),
+    ("accepted", "accepted"),
+    ("rejected", "rejected"),
+)
+
 INTEREST_VALIDATOR = [MinValueValidator(0.03), MaxValueValidator(2.0)]
 
 
@@ -15,10 +21,20 @@ class LoanRequest(models.Model):
         User, on_delete=models.CASCADE, related_name="loan_requests"
     )
 
-    loan_amount = models.DecimalField(default=0.00, max_digits=10, decimal_places=2)
+    loan_amount = models.DecimalField(
+        default=0.01,
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.01"))],
+    )
     loan_period = models.PositiveIntegerField(default=1)
 
-    lenme_fee = models.DecimalField(default=0.00, max_digits=10, decimal_places=2)
+    lenme_fee = models.DecimalField(
+        default=0.00,
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.01"))],
+    )
 
     status = models.CharField(default="pending", choices=LOAN_STATUS, max_length=10)
 
@@ -49,6 +65,8 @@ class Offer(models.Model):
 
     interest_rate = models.FloatField(default=0.03, validators=INTEREST_VALIDATOR)
 
+    status = models.CharField(default="pending", choices=OFFER_STATUS, max_length=10)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     @property
@@ -64,7 +82,7 @@ class Offer(models.Model):
         return self.interest + self.loan_request.loan_amount
 
     @property
-    def monthly_payment(self):
+    def monthly_payment(self) -> Decimal:
         return self.total_amount_after_interest / self.loan_request.loan_period
 
     class Meta:
@@ -77,6 +95,7 @@ class Offer(models.Model):
 
     def save(self, *args, **kwargs):
         cache.delete("offers")
+        cache.delete("accepted_offers")
         super().save(*args, **kwargs)
 
 
@@ -90,6 +109,12 @@ class ScheduledPayment(models.Model):
     offer = models.ForeignKey(Offer, on_delete=models.CASCADE)
 
     payment_date = models.DateTimeField()
-    payment_amount = models.DecimalField(default=0.00, decimal_places=2, max_digits=10)
+    payment_amount = models.DecimalField(
+        default=0.01,
+        decimal_places=2,
+        max_digits=10,
+        validators=[MinValueValidator(Decimal("0.01"))],
+    )
 
     is_complete = models.BooleanField(default=False)
+    is_last_payment = models.BooleanField(default=False)
