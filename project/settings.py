@@ -11,9 +11,11 @@ SECRET_KEY = env("SECRET_KEY")
 
 DEBUG = env.bool("DEBUG")
 
+AUTH_USER_MODEL = "accounts.User"
+
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
-CSRF_TRUSTED_ORIGINS = [env("ALLOWED_ORIGIN")]
-CORS_ALLOWED_ORIGINS = [env("ALLOWED_ORIGIN")]
+CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1"]
+CORS_ALLOWED_ORIGINS = ["http://127.0.0.1"]
 
 # Application definition
 INSTALLED_APPS = [
@@ -29,6 +31,8 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "drf_spectacular_sidecar",
     # Internal apps
+    "accounts",
+    "lending",
 ]
 
 REST_FRAMEWORK = {
@@ -43,7 +47,7 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "Lenme API",
     "VERSION": "1.0.0",
-    "SCHEMA_PATH_PREFIX": "/api/",
+    "SCHEMA_PATH_PREFIX": "/api/v1/",
     "COMPONENT_SPLIT_REQUEST": True,
     "SWAGGER_UI_DIST": "SIDECAR",
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
@@ -52,6 +56,13 @@ SPECTACULAR_SETTINGS = {
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=6),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=2),
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "ecom",
+    }
 }
 
 MIDDLEWARE = [
@@ -101,19 +112,12 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
