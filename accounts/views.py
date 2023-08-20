@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
 from .serializers import UserSerializer
 from . import services
 
@@ -13,4 +14,4 @@ class UserSignup(APIView):
 
         services.user_create(data=serializer.validated_data)
 
-        return Response("account created successfully")
+        return Response("account created successfully", status=status.HTTP_201_CREATED)
