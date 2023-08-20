@@ -30,7 +30,7 @@ class LoanRequest(models.Model):
     loan_period = models.PositiveIntegerField(default=1)
 
     lenme_fee = models.DecimalField(
-        default=0.00,
+        default=0.01,
         max_digits=10,
         decimal_places=2,
         validators=[MinValueValidator(Decimal("0.01"))],
@@ -83,7 +83,9 @@ class Offer(models.Model):
 
     @property
     def monthly_payment(self) -> Decimal:
-        return self.total_amount_after_interest / self.loan_request.loan_period
+        return round(
+            self.total_amount_after_interest / self.loan_request.loan_period, 2
+        )
 
     class Meta:
         ordering = ["-created_at"]
@@ -118,3 +120,6 @@ class ScheduledPayment(models.Model):
 
     is_complete = models.BooleanField(default=False)
     is_last_payment = models.BooleanField(default=False)
+
+    def __str__(self) -> str:
+        return f"{self.payment_date.date()}"

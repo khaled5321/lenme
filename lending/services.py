@@ -35,28 +35,6 @@ def offer_accept(*, offer_id: int) -> None:
     offer.save()
 
 
-def payment_schedule(*, offer: Offer) -> None:
-    number_of_payments = offer.loan_request.loan_period
-    payment_amount = offer.monthly_payment
-
-    scheduled_payments = []
-
-    for index in range(number_of_payments):
-        payment = ScheduledPayment(
-            borrower=offer.loan_request.borrower,
-            loan_request=offer.loan_request,
-            offer=offer,
-            payment_amount=payment_amount,
-        )
-        payment.payment_date = timezone.now() + timedelta(days=(index + 1) * 30)
-        if index == number_of_payments - 1:
-            payment.is_last_payment = True
-
-        scheduled_payments.append(payment)
-
-    ScheduledPayment.objects.bulk_create(scheduled_payments)
-
-
 def lender_balance_check(lender: User, offer_id: int) -> None:
     offer = get_object_or_404(Offer, id=offer_id)
     amount = offer.loan_request.total_loan_amount
@@ -78,6 +56,11 @@ def lender_balance_deduct(lender: User, amount: Decimal) -> None:
     lender.save()
 
 
+def lender_balance_add(lender: User, amount: Decimal) -> None:
+    lender.balance += amount
+    lender.save()
+
+
 def borrower_balance_add(borrower: User, amount: Decimal) -> None:
     borrower.balance += amount
     borrower.save()
@@ -91,6 +74,28 @@ def borrower_balance_deduct(borrower: User, amount: Decimal) -> None:
 
     borrower.balance += amount
     borrower.save()
+
+
+def payment_schedule(*, offer: Offer) -> None:
+    number_of_payments = offer.loan_request.loan_period
+    payment_amount = offer.monthly_payment
+
+    scheduled_payments = []
+
+    for index in range(number_of_payments):
+        payment = ScheduledPayment(
+            borrower=offer.loan_request.borrower,
+            loan_request=offer.loan_request,
+            offer=offer,
+            payment_amount=payment_amount,
+        )
+        payment.payment_date = timezone.now() + timedelta(days=(index + 1) * 30)
+        if index == number_of_payments - 1:
+            payment.is_last_payment = True
+
+        scheduled_payments.append(payment)
+
+    ScheduledPayment.objects.bulk_create(scheduled_payments)
 
 
 @transaction.atomic

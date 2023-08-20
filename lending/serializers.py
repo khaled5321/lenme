@@ -28,6 +28,9 @@ class OfferSerializer(serializers.ModelSerializer):
             "status",
             "created_at",
         ]
+        extra_kwargs = {
+            "status": {"read_only": True},
+        }
 
     def get_monthly_payment(self, obj):
         return obj.monthly_payment
